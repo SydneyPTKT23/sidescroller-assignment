@@ -11,14 +11,9 @@ namespace SLC.Sidescroller
         [Header("Ground Settings")]
         [SerializeField] private float gravityMultiplier = 1.5f;
         [SerializeField] private float stickToGroundForce = 2.0f;
-        [Space]
-        [SerializeField] private LayerMask groundLayer = ~0;
-        [Range(0f, 1f)] [SerializeField] private float rayLength = 0.1f;
-        [Range(0.01f, 1f)] [SerializeField] private float raySphereRadius = 0.1f;
 
         [Header("DEBUG")]
         [SerializeField] private Vector3 m_movementVector;
-        [SerializeField] private float m_finalRayLength;
         [SerializeField] private bool m_isGrounded;
 
         public ParticleSystem m_explosionParticle;
@@ -38,16 +33,12 @@ namespace SLC.Sidescroller
             m_audioSource = GetComponent<AudioSource>();
             m_characterController = GetComponent<CharacterController>();
             m_animator = GetComponentInChildren<Animator>();
-
-            m_finalRayLength = rayLength + m_characterController.center.y;
         }
 
         private void Update()
         {
             if (m_characterController)
             {
-                CheckIfGrounded();
-
                 AddDownForce();
                 AddMovement();
             }
@@ -59,6 +50,7 @@ namespace SLC.Sidescroller
             // for temporary variables.            
             if (t_collision.gameObject.CompareTag("Obstacle"))
             {
+                // Death event handled here, SFX and animations.
                 gameOver = true;
                 m_audioSource.PlayOneShot(crashSound, 0.35f);
 
@@ -70,23 +62,8 @@ namespace SLC.Sidescroller
             }
         }
 
-        private void CheckIfGrounded()
-        {
-            Vector3 t_origin = transform.position + m_characterController.center;
-            bool t_hitGround = Physics.SphereCast(t_origin, raySphereRadius, Vector3.down, out _, m_finalRayLength, groundLayer);
-            Debug.DrawRay(t_origin, Vector3.down * (m_finalRayLength), Color.red);
-
-            m_isGrounded = t_hitGround;
-        }
-
         private void HandleBounce()
         {
-            if (m_isGrounded && !gameOver)
-            {
-                if (!m_runningParticle.isPlaying)
-                    m_runningParticle.Play();
-            }
-
             if (Input.GetKeyDown(KeyCode.Space) && !gameOver)
             {
                 m_audioSource.PlayOneShot(jumpSound, 0.35f);
@@ -100,8 +77,12 @@ namespace SLC.Sidescroller
 
         private void AddDownForce()
         {
+            // If player is grounded, do related stuff, otherwise apply gravity.
             if (m_characterController.isGrounded)
             {
+                if (!m_runningParticle.isPlaying)
+                    m_runningParticle.Play();
+
                 m_movementVector.y = -stickToGroundForce;
                 HandleBounce();
             }
@@ -113,6 +94,7 @@ namespace SLC.Sidescroller
 
         private void AddMovement()
         {
+            // Necessary so the jump actually applies movement.
             m_characterController.Move(m_movementVector * Time.deltaTime);
         }
     }

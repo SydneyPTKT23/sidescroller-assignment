@@ -15,6 +15,7 @@ namespace SLC.Sidescroller
 
         private void Update()
         {
+            // If position gets too close to the edge, reset it.
             if (transform.position.x < startPosition.x - repeatWidth)
             {
                 transform.position = startPosition;

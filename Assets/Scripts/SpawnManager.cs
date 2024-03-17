@@ -14,6 +14,7 @@ namespace SLC.Sidescroller
 
         private void Start()
         {
+            // Invoke a repeating of the obstacle spawn function with set times.
             m_movementController = FindObjectOfType<MovementController>();
             InvokeRepeating(nameof(SpawnObstacle), startDelay, repeatRate);
         }
