@@ -14,6 +14,9 @@ namespace SLC.Sidescroller
 
         [Header("DEBUG")]
         [SerializeField] private Vector3 m_movementVector;
+        [SerializeField] private bool m_isOnGround;
+
+        public bool gameOver = false;
 
         private CharacterController m_characterController;
 
@@ -28,6 +31,18 @@ namespace SLC.Sidescroller
             {
                 AddDownForce();
                 AddMovement();
+            }
+        }
+
+        private void OnCollisionEnter(Collision t_collision)
+        {
+            if (t_collision.gameObject.CompareTag("Ground"))
+            {
+                m_isOnGround = true;
+            }
+            else if (t_collision.gameObject.CompareTag("Obstacle"))
+            {
+                gameOver = true;
             }
         }
 
