@@ -5,8 +5,6 @@ namespace SLC.Sidescroller
 {
     public class GameOverScreen : MonoBehaviour
     {
-        public Scene menuScene;
-
         [SerializeField] private GameObject m_panel;
         private MovementController m_movementController;
 
@@ -31,7 +29,7 @@ namespace SLC.Sidescroller
 
         public void ReturnToMainMenu()
         {
-            SceneManager.LoadScene(menuScene.name);
+            SceneManager.LoadScene("Main Menu");
         }
     }
 }
