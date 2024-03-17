@@ -11,24 +11,38 @@ namespace SLC.Sidescroller
         [Header("Ground Settings")]
         [SerializeField] private float gravityMultiplier = 1.5f;
         [SerializeField] private float stickToGroundForce = 2.0f;
+        [Space]
+        [SerializeField] private LayerMask groundLayer = ~0;
+        [Range(0f, 1f)] [SerializeField] private float rayLength = 0.1f;
+        [Range(0.01f, 1f)] [SerializeField] private float raySphereRadius = 0.1f;
 
         [Header("DEBUG")]
         [SerializeField] private Vector3 m_movementVector;
-        [SerializeField] private bool m_isOnGround;
+        [SerializeField] private float m_finalRayLength;
+        [SerializeField] private bool m_isGrounded;
+
+        public ParticleSystem m_explosionParticle;
+        public ParticleSystem m_runningParticle;
 
         public bool gameOver = false;
 
         private CharacterController m_characterController;
+        private Animator m_animator;
 
         private void Start()
         {
             m_characterController = GetComponent<CharacterController>();
+            m_animator = GetComponentInChildren<Animator>();
+
+            m_finalRayLength = rayLength + m_characterController.center.y;
         }
 
         private void Update()
         {
             if (m_characterController)
             {
+                CheckIfGrounded();
+
                 AddDownForce();
                 AddMovement();
             }
@@ -36,20 +50,43 @@ namespace SLC.Sidescroller
 
         private void OnCollisionEnter(Collision t_collision)
         {
-            if (t_collision.gameObject.CompareTag("Ground"))
-            {
-                m_isOnGround = true;
-            }
-            else if (t_collision.gameObject.CompareTag("Obstacle"))
+            // The t_ -naming convention is a personal distinction I like to make
+            // for temporary variables.            
+            if (t_collision.gameObject.CompareTag("Obstacle"))
             {
                 gameOver = true;
+
+                m_explosionParticle.Play();
+                m_runningParticle.Stop();
+
+                m_animator.SetBool("Death_b", true);
+                m_animator.SetInteger("DeathType_int", 1);
             }
+        }
+
+        private void CheckIfGrounded()
+        {
+            Vector3 t_origin = transform.position + m_characterController.center;
+            bool t_hitGround = Physics.SphereCast(t_origin, raySphereRadius, Vector3.down, out _, m_finalRayLength, groundLayer);
+            Debug.DrawRay(t_origin, Vector3.down * (m_finalRayLength), Color.red);
+
+            m_isGrounded = t_hitGround;
         }
 
         private void HandleBounce()
         {
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (m_isGrounded && !gameOver)
             {
+                if (!m_runningParticle.isPlaying)
+                    m_runningParticle.Play();
+            }
+
+            if (Input.GetKeyDown(KeyCode.Space) && !gameOver)
+            {
+                if(m_runningParticle.isPlaying)
+                    m_runningParticle.Stop();
+
+                m_animator.SetTrigger("Jump_trig");
                 m_movementVector.y = jumpForce;
             }
         }
