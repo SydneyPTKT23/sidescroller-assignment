@@ -24,13 +24,18 @@ namespace SLC.Sidescroller
         public ParticleSystem m_explosionParticle;
         public ParticleSystem m_runningParticle;
 
+        public AudioClip crashSound;
+        public AudioClip jumpSound;
+
         public bool gameOver = false;
 
+        private AudioSource m_audioSource;
         private CharacterController m_characterController;
         private Animator m_animator;
 
         private void Start()
         {
+            m_audioSource = GetComponent<AudioSource>();
             m_characterController = GetComponent<CharacterController>();
             m_animator = GetComponentInChildren<Animator>();
 
@@ -55,6 +60,7 @@ namespace SLC.Sidescroller
             if (t_collision.gameObject.CompareTag("Obstacle"))
             {
                 gameOver = true;
+                m_audioSource.PlayOneShot(crashSound, 0.35f);
 
                 m_explosionParticle.Play();
                 m_runningParticle.Stop();
@@ -83,6 +89,7 @@ namespace SLC.Sidescroller
 
             if (Input.GetKeyDown(KeyCode.Space) && !gameOver)
             {
+                m_audioSource.PlayOneShot(jumpSound, 0.35f);
                 if(m_runningParticle.isPlaying)
                     m_runningParticle.Stop();
 
